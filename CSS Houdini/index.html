@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CSS Houdini Examples</title>
+    <link href="https://fonts.googleapis.com/css2?family=Overpass:ital,wght@0,300;0,400;0,700;1,900&display=swap" rel="stylesheet">
+    <style>
+        @keyframes progress-key-frames {
+            from {
+                --progress: 0;
+            }
+
+            to {
+                --progress: 100;
+            }
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            text-align: center;
+            font-family: 'Overpass', sans-serif;
+        }
+
+        section {
+            margin: 100px 0;
+        }
+
+        .progress-bar {
+            --progress: 30;
+            background-image: paint(progressPaint);
+            height: 20px;
+            max-width: 500px;
+            width: 100%;
+            margin: 0 auto;
+            animation-name: progress-key-frames;
+            animation-duration: 5s;
+            animation-timing-function: linear;
+            animation-iteration-count: infinite;
+        }
+
+        .star {
+            --star-n: 5;
+            --star-rotation: 90;
+            width: 300px;
+            height: 300px;
+            margin: 0 auto;
+            background-image: paint(starPaint);
+        }
+
+        .gear {
+            position: fixed;
+            top: 10px;
+            left: 10px;
+            width: 100px;
+            height: 100px;
+            background-color: blue;
+            border-radius: 50%;
+        }
+
+        .gear::after {
+            position: absolute;
+            content: '';
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background-color: yellow;
+            top: 5px;
+            left: 50%;
+            transform: translateX(-50%)
+        }
+
+        .gear-2 {
+            top: 120px;
+        }
+
+        .gear-3 {
+            top: 230px;
+        }
+    </style>
+</head>
+<body>
+    <h1>CSS Houdini Examples</h1>
+
+    <section>
+        <div class="progress-bar">
+        </div>
+    </section>
+
+    <section>
+        <div class="star">
+        </div>
+    </section>
+
+    <section style="height: 3000px;">
+        <div class="gear gear-1">
+        </div>
+        <div class="gear gear-2">
+        </div>
+        <div class="gear gear-3">
+        </div>
+    </section>
+</body>
+<script>
+    if (CSS && CSS.registerProperty) {
+        CSS.registerProperty({
+            name: '--progress',
+            syntax: '<number>',
+            initialValue: 0,
+            inherits: false,
+        });
+
+        CSS.registerProperty({
+            name: '--star-rotation',
+            syntax: '<number>',
+            initialValue: 0,
+            inherits: false,
+        });
+    }
+
+    if (CSS && CSS.paintWorklet) {
+        CSS.paintWorklet.addModule('./worklets/progress-bar.js');
+
+        CSS.paintWorklet.addModule('./worklets/star.js');
+    }
+
+    if (CSS && CSS.animationWorklet) {
+        CSS.animationWorklet.addModule("./worklets/animate.js").then(() => {
+            new WorkletAnimation(
+                'scrollanimate',
+                new KeyframeEffect(
+                    document.querySelector('.gear-1'),
+                    [
+                        { transform: 'rotate(0deg)' },
+                        { transform: 'rotate(360deg)' }
+                    ],
+                    {
+                        duration: 1000,
+                        fill: 'both'
+                    }
+                ),
+                // document.timeline
+                new ScrollTimeline({
+                    scrollSource: document.documentElement,
+                    orientation: "vertical", // "horizontal" or "vertical".
+                    timeRange: 1000,
+                }),
+            ).play();
+
+            new WorkletAnimation(
+                'scrollanimate',
+                new KeyframeEffect(
+                    document.querySelector('.gear-2'),
+                    [
+                        { transform: 'rotate(0deg)' },
+                        { transform: 'rotate(360deg)' }
+                    ],
+                    {
+                        duration: 1000,
+                        fill: 'both'
+                    }
+                ),
+                // document.timeline
+                new ScrollTimeline({
+                    scrollSource: document.documentElement,
+                    orientation: "vertical", // "horizontal" or "vertical".
+                    timeRange: 500,
+                }),
+            ).play();
+
+            new WorkletAnimation(
+                'scrollanimate',
+                new KeyframeEffect(
+                    document.querySelector('.gear-3'),
+                    [
+                        { transform: 'rotate(0deg)' },
+                        { transform: 'rotate(360deg)' }
+                    ],
+                    {
+                        duration: 1000,
+                        fill: 'both',
+                        iterations: Infinity,
+                    }
+                ),
+                document.timeline
+                // new ScrollTimeline({
+                //     scrollSource: document.documentElement,
+                //     orientation: "vertical", // "horizontal" or "vertical".
+                //     timeRange: 100,
+                // }),
+            ).play();
+        });
+    }
+
+</script>
+</html>
